@@ -1,44 +1,82 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Navbar from "./components/navbar/Navbar";
-import { ethers } from "ethers";
+import React from "react";
+import { JsonRpcSigner, ethers } from "ethers";
+import Body from "./components/body/Body";
+
+interface Web3Object {
+  signer: JsonRpcSigner | undefined;
+  account: string;
+  network: string;
+  error: string;
+}
+
+export const Web3Context = React.createContext<Web3Object>({
+  signer: undefined,
+  account: "",
+  network: "",
+  error: "",
+});
 
 function App() {
-  const [account, setAccount] = useState("");
-  const [network, setNetwork] = useState("");
+  const [signer, setSigner] = useState<JsonRpcSigner | undefined>(undefined);
+  const [account, setAccount] = useState<string>("");
+  const [network, setNetwork] = useState<string>("");
+  const [error, setError] = useState<string>("");
 
-  async function connect() {
-    let signer = null;
-
-    let provider;
+  const connect = useCallback(async () => {
+    const ethereum = (window as any).ethereum;
     if ((window as any).ethereum == null) {
-      console.log("No Metamask");
-    } else {
-      provider = new ethers.BrowserProvider((window as any).ethereum);
-      signer = await provider.getSigner();
+      setError("install");
+      return;
+    }
+
+    const provider = new ethers.BrowserProvider(ethereum);
+
+    try {
+      const signer = await provider.getSigner();
+      setSigner(signer);
       setAccount(signer.address);
       setNetwork((await provider.getNetwork()).chainId.toString());
+      setError("");
+    } catch (_) {
+      setError("login");
     }
-  }
+
+    ethereum.removeAllListeners();
+
+    ethereum.on("accountsChanged", () => connect());
+    ethereum.on("chainChanged", () => connect());
+  }, []);
+
+  const switchChain = async (chainId: string) => {
+    const ethereum = (window as any).ethereum;
+    try {
+      await ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: ethers.toBeHex(chainId) }],
+      });
+    } catch (_) {}
+  };
 
   useEffect(() => {
     connect();
-    (window as any).ethereum != null &&
-      (window as any).ethereum.on("accountsChanged", () => connect());
-    (window as any).ethereum != null &&
-      (window as any).ethereum.on("chainChanged", () => connect());
-  }, []);
+  }, [connect]);
 
   return (
-    <>
-      <Navbar />
-      <div className="flex justify-center w-full h-fit">
-        <p>
-          {account}
-          {"->"}
-        </p>
-        <p>{network}</p>
-      </div>
-    </>
+    <Web3Context.Provider
+      value={{
+        signer: signer,
+        account: account,
+        network: network,
+        error: error,
+      }}
+    >
+      <>
+        <Navbar switchChain={switchChain} connect={connect} />
+        <Body />
+      </>
+    </Web3Context.Provider>
   );
 }
 
