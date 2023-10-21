@@ -3,13 +3,7 @@ import Navbar from "./components/navbar/Navbar";
 import React from "react";
 import { JsonRpcSigner, ethers } from "ethers";
 import Body from "./components/body/Body";
-
-interface Web3Object {
-  signer: JsonRpcSigner | undefined;
-  account: string;
-  network: string;
-  error: string;
-}
+import { Web3Object } from "./interfaces";
 
 export const Web3Context = React.createContext<Web3Object>({
   signer: undefined,

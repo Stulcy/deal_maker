@@ -1,33 +1,91 @@
 import { Contract, ethers } from "ethers";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import dealDeployerAbi from "../../abi/dealDeployer.json";
+import dealAbi from "../../abi/deal.json";
+import erc20Abi from "../../abi/erc20.json";
 import { Web3Context } from "../../App";
 import { DEAL_DEPLOYER_ADDRESS } from "../../constants";
+import DealItem from "./components/DealItem";
+import { DealData } from "../../interfaces";
 
 const DealsList = () => {
   const web3Context = useContext(Web3Context);
-  const [deals, setDeals] = useState<string[]>([]);
+  const [deals, setDeals] = useState<DealData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  async function getDeals() {
+  const getDeals = useCallback(async () => {
     const dealDeployerContract = new Contract(
       DEAL_DEPLOYER_ADDRESS,
       dealDeployerAbi,
       web3Context.signer
     );
     const res = await dealDeployerContract.getDeals(web3Context.account);
-    setDeals(res.map((item: string) => item));
-  }
+    const dealList: string[] = res.map((item: string) => item);
+    const dealDataList: DealData[] = [];
+    for (const dealAddress of dealList) {
+      const dealContract = new Contract(
+        dealAddress,
+        dealAbi,
+        web3Context.signer
+      );
+      const isCompleted = await dealContract.completed();
+      if (isCompleted) return;
+      const token0 = await dealContract.token0();
+      const token0Name = await new Contract(
+        token0,
+        erc20Abi,
+        web3Context.signer
+      ).name();
+      const token1 = await dealContract.token1();
+      const token1Name = await new Contract(
+        token1,
+        erc20Abi,
+        web3Context.signer
+      ).name();
+      const user0 = await dealContract.user0();
+      const user1 = await dealContract.user1();
+      const amount0 = ethers.formatEther(await dealContract.amount0());
+      const amount1 = ethers.formatEther(await dealContract.amount1());
+      const didUser0Allow = await dealContract.didUserAllow(user0);
+      const didUser1Allow = await dealContract.didUserAllow(user1);
+      dealDataList.push({
+        address: dealAddress,
+        token0: token0,
+        token0Name: token0Name,
+        token1: token1,
+        token1Name: token1Name,
+        user0: user0,
+        user1: user1,
+        amount0: amount0,
+        amount1: amount1,
+        didUser0Allow: didUser0Allow,
+        didUser1Allow: didUser1Allow,
+      });
+    }
+    setLoading(false);
+    setDeals(dealDataList);
+  }, [web3Context.account, web3Context.signer]);
 
   useEffect(() => {
+    setDeals([]);
+    setLoading(true);
     if (web3Context.signer) getDeals();
-  }, [web3Context.signer]);
+  }, [web3Context.signer, getDeals]);
 
   return (
     <div className="flex-1 flex flex-col items-center">
-      <h1 className="text-[26px]">DealsList</h1>
-      {deals.map((deal) => (
-        <h1 key={deal}>{deal}</h1>
-      ))}
+      <h1 className="text-[26px] my-4">Open deals</h1>
+      {loading ? (
+        <h1>Loading ...</h1>
+      ) : deals.length === 0 ? (
+        <h1>No active deals found :/</h1>
+      ) : (
+        <>
+          {deals.map((dealData) => (
+            <DealItem key={dealData.address} dealData={dealData} />
+          ))}
+        </>
+      )}
     </div>
   );
 };
