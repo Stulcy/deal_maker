@@ -68,7 +68,7 @@ function App() {
     >
       <>
         <Navbar switchChain={switchChain} connect={connect} />
-        <Body />
+        <Body switchChain={switchChain} />
       </>
     </Web3Context.Provider>
   );

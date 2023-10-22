@@ -14,61 +14,63 @@ const DealsList = () => {
   const [loading, setLoading] = useState(true);
 
   const getDeals = useCallback(async () => {
+    setDeals([]);
+    setLoading(true);
     const dealDeployerContract = new Contract(
       DEAL_DEPLOYER_ADDRESS,
       dealDeployerAbi,
       web3Context.signer
     );
-    const res = await dealDeployerContract.getDeals(web3Context.account);
-    const dealList: string[] = res.map((item: string) => item);
-    const dealDataList: DealData[] = [];
-    for (const dealAddress of dealList) {
-      const dealContract = new Contract(
-        dealAddress,
-        dealAbi,
-        web3Context.signer
-      );
-      const isCompleted = await dealContract.completed();
-      if (isCompleted) return;
-      const token0 = await dealContract.token0();
-      const token0Name = await new Contract(
-        token0,
-        erc20Abi,
-        web3Context.signer
-      ).name();
-      const token1 = await dealContract.token1();
-      const token1Name = await new Contract(
-        token1,
-        erc20Abi,
-        web3Context.signer
-      ).name();
-      const user0 = await dealContract.user0();
-      const user1 = await dealContract.user1();
-      const amount0 = ethers.formatEther(await dealContract.amount0());
-      const amount1 = ethers.formatEther(await dealContract.amount1());
-      const didUser0Allow = await dealContract.didUserAllow(user0);
-      const didUser1Allow = await dealContract.didUserAllow(user1);
-      dealDataList.push({
-        address: dealAddress,
-        token0: token0,
-        token0Name: token0Name,
-        token1: token1,
-        token1Name: token1Name,
-        user0: user0,
-        user1: user1,
-        amount0: amount0,
-        amount1: amount1,
-        didUser0Allow: didUser0Allow,
-        didUser1Allow: didUser1Allow,
-      });
-    }
+    try {
+      const res = await dealDeployerContract.getDeals(web3Context.account);
+      const dealList: string[] = res.map((item: string) => item);
+      const dealDataList: DealData[] = [];
+      for (const dealAddress of dealList) {
+        const dealContract = new Contract(
+          dealAddress,
+          dealAbi,
+          web3Context.signer
+        );
+        const isCompleted = await dealContract.completed();
+        if (isCompleted) return;
+        const token0 = await dealContract.token0();
+        const token0Name = await new Contract(
+          token0,
+          erc20Abi,
+          web3Context.signer
+        ).name();
+        const token1 = await dealContract.token1();
+        const token1Name = await new Contract(
+          token1,
+          erc20Abi,
+          web3Context.signer
+        ).name();
+        const user0 = await dealContract.user0();
+        const user1 = await dealContract.user1();
+        const amount0 = ethers.formatEther(await dealContract.amount0());
+        const amount1 = ethers.formatEther(await dealContract.amount1());
+        const didUser0Allow = await dealContract.didUserAllow(user0);
+        const didUser1Allow = await dealContract.didUserAllow(user1);
+        dealDataList.push({
+          address: dealAddress,
+          token0: token0,
+          token0Name: token0Name,
+          token1: token1,
+          token1Name: token1Name,
+          user0: user0,
+          user1: user1,
+          amount0: amount0,
+          amount1: amount1,
+          didUser0Allow: didUser0Allow,
+          didUser1Allow: didUser1Allow,
+        });
+      }
+      setDeals(dealDataList);
+    } catch (_) {}
     setLoading(false);
-    setDeals(dealDataList);
   }, [web3Context.account, web3Context.signer]);
 
   useEffect(() => {
-    setDeals([]);
-    setLoading(true);
     if (web3Context.signer) getDeals();
   }, [web3Context.signer, getDeals]);
 
@@ -82,7 +84,11 @@ const DealsList = () => {
       ) : (
         <>
           {deals.map((dealData) => (
-            <DealItem key={dealData.address} dealData={dealData} />
+            <DealItem
+              key={dealData.address}
+              dealData={dealData}
+              getDeals={getDeals}
+            />
           ))}
         </>
       )}
