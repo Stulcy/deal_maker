@@ -14,7 +14,7 @@ const Body = ({
 
   return (
     <div className="w-full h-fit flex justify-center">
-      <div className="w-[95%] h-fit flex">
+      <div className="w-[95%] h-fit flex md:flex-row flex-col">
         {web3Context.network === MUMBAI_ID ? (
           <>
             <DealsList />

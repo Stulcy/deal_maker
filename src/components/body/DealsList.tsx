@@ -75,7 +75,7 @@ const DealsList = () => {
   }, [web3Context.signer, getDeals]);
 
   return (
-    <div className="flex-1 flex flex-col items-center">
+    <div className="flex-1 flex flex-col items-center order-last md:order-first">
       <h1 className="text-[26px] my-4">Open deals</h1>
       {loading ? (
         <h1>Loading ...</h1>

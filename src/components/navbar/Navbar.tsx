@@ -44,9 +44,9 @@ const Navbar = ({
         </h1>
         <div className="flex flex-col items-end">
           <h1
-            className={`${
+            className={`text-right ${
               (web3Context.error || web3Context.network !== MUMBAI_ID) &&
-              "cursor-pointer"
+              "cursor-pointer hover:text-mainBlue"
             }`}
             onClick={() => getOnClick()}
           >
