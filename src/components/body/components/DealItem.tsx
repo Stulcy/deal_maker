@@ -36,18 +36,18 @@ const DealItem = ({
     return (
       <div
         onClick={inProgress ? () => {} : () => getButtonFunction()}
-        className={`flex flex-col w-[60%] h-[30px] bg-[#5c5c5c] ${
+        className={`flex flex-col w-[60%] h-[30px] bg-mainBlue ${
           !inProgress && !partnerAllowanceMissing() && "hover:bg-[#7a7a7a]"
-        } cursor-${
+        } ${
           inProgress
-            ? "progress"
+            ? "cursor-progress"
             : partnerAllowanceMissing()
-            ? "not-allowed"
-            : "pointer"
+            ? "cursor-not-allowed"
+            : "cursor-pointer"
         }`}
       >
         <div className="flex-1 flex">
-          <div className="flex flex-1 items-center justify-center">
+          <div className="flex flex-1 items-center justify-center text-white">
             {getButtonTitle()}
           </div>
           <div className="bg-mainLight w-[2px] h-[40%] self-end" />
@@ -121,7 +121,7 @@ const DealItem = ({
   }
 
   return (
-    <div className="flex flex-col items-center h-fit w-full">
+    <div className="flex flex-col items-center h-fit w-full mb-8">
       <DealItemWrapper>
         <div className="flex-1 flex flex-col items-center">
           <h1>You</h1>

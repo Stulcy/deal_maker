@@ -23,7 +23,10 @@ const DealsList = () => {
     );
     try {
       const res = await dealDeployerContract.getDeals(web3Context.account);
-      const dealList: string[] = res.map((item: string) => item);
+      let dealList: string[] = res.map((item: string) => item);
+      dealList = dealList.filter((obj) => {
+        return obj !== "0x0000000000000000000000000000000000000000";
+      });
       const dealDataList: DealData[] = [];
       for (const dealAddress of dealList) {
         const dealContract = new Contract(
@@ -75,7 +78,7 @@ const DealsList = () => {
   }, [web3Context.signer, getDeals]);
 
   return (
-    <div className="flex-1 flex flex-col items-center order-last md:order-first">
+    <div className="flex-1 flex flex-col items-center order-last lg:order-first">
       <h1 className="text-[26px] my-4">Open deals</h1>
       {loading ? (
         <h1>Loading ...</h1>
