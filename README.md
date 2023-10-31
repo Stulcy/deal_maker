@@ -11,6 +11,3 @@ Let's say you want to swap 20 WETH for 1 WBTC on Polygon for example. One user n
 - ```npm i```
 - ```npm run start```
 <br />
-
-
-![Screenshot 2023-10-25 at 14 08 45](https://github.com/Stulcy/deal_maker/assets/73637387/6a7cd243-ab83-4b48-a54a-b901616316e4)
